@@ -7,5 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Rich Kearse",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "inquire": "^0.4.8",
+    "inquirer": "^6.0.0",
+    "mysql": "^2.16.0"
+  }
 }
