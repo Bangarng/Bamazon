@@ -68,65 +68,81 @@ function buyProducts() {
         var item = answer.productNumber;
         var quantity = answer.itemQuantity;
         var queryStr2 = 'SELECT * FROM products WHERE ?';
-        inquirer
-        .prompt( 
-            //confirm they selected the right item and quantity
-            {
-                type: "confirm",
-                message: "I see you've selected " + item + " and " + quantity + ". Is this correct?",
-                name: "confirmBuy",
-                default: true
-            }    
-        )
-        .then(function(userResponse) {
-            connection.query(queryStr2, {item_id: item}, function(err, data) {
-                if (err) throw err;
-                var productInfo = data[0];
-                //if user is ready to make the purchase
-                if (userResponse.confirmBuy) {
-                    console.log("Great.");
-                    //checking if we have enough inventory for purchase
-                    if(quantity <= productInfo.stock_quantity) {
-                        console.log("Looks like we have " + quantity + " " + productInfo.product_name + "(s) available."); 
-                        console.log("Your purchase was successful.");
-                        console.log("Thank you for using Bamazon, the #2 online retailer."); 
-                        connection.end();
-                    } 
-                    else {
-                        console.log("I'm sorry, we do not have " + quantity + " " + productInfo.product_name + "(s) available.");
-                        //in this case we do not have enough inventory.
-                        //checking if user would like to place another order.
-                        inquirer
-                        .prompt( 
-                            {
-                                type: "confirm",
-                                message: "Would you like to place another order?",
-                                name: "confirmTryAgain",
-                                default: true
+        if(item > 0 && item < 10) {
+            inquirer
+            .prompt( 
+                //confirm they selected the right item and quantity
+                {
+                    type: "confirm",
+                    message: "I see you've selected " + item + " and " + quantity + ". Is this correct?",
+                    name: "confirmBuy",
+                    default: true
+                }    
+            )
+            .then(function(userResponse) {
+
+                    connection.query(queryStr2, {item_id: item}, function(err, data) {
+                        if (err) throw err;
+                        var productInfo = data[0];
+                        //if user is ready to make the purchase
+                        if (userResponse.confirmBuy) {
+                            console.log("Great.");
+                            //checking if we have enough inventory for purchase
+                            if(quantity <= productInfo.stock_quantity) {
+                                console.log("Looks like we have " + quantity + " " + productInfo.product_name + "(s) available."); 
+                                
+                                // Construct the updating query string
+                                var updateQuantityQuery = 'UPDATE products SET stock_quantity = ' + (productInfo.stock_quantity - quantity) + ' WHERE item_id = ' + item;
+                                // Update the inventory
+                                connection.query(updateQuantityQuery, function(err, data) {
+                                    if (err) throw err;
+
+                                    console.log("Your purchase was successful. Your total is $" + productInfo.price * quantity + ".");
+                                    console.log("Thank you for using Bamazon, the #2 online retailer."); 
+                                    connection.end();
+
+                                })
+                            } 
+                            else {
+                                console.log("I'm sorry, we do not have " + quantity + " " + productInfo.product_name + "(s) available.");
+                                //in this case we do not have enough inventory.
+                                //checking if user would like to place another order.
+                                inquirer
+                                .prompt( 
+                                    {
+                                        type: "confirm",
+                                        message: "Would you like to place another order?",
+                                        name: "confirmTryAgain",
+                                        default: true
+                                    }
+                                )
+                                .then(function(repurchase) {
+                                    //if user wants to make another purchase, start the buyProducts function.
+                                    if(repurchase.confirmTryAgain) {
+                                        console.log("Great. Let's start over.");
+                                        buyProducts();
+                                    //if they do not want to make another purchase, end the app.    
+                                    } else {
+                                        console.log("Sorry we could not complete your order today.");
+                                        console.log("Thank you for using Bamazon, the #2 online retailer.");
+                                        connection.end();
+                                    }
+                                });        
+                                
                             }
-                        )
-                        .then(function(repurchase) {
-                            //if user wants to make another purchase, start the buyProducts function.
-                            if(repurchase.confirmTryAgain) {
-                                console.log("Great. Let's start over.");
-                                buyProducts();
-                            //if they do not want to make another purchase, end the app.    
-                            } else {
-                                console.log("Sorry we could not complete your order today.");
-                                console.log("Thank you for using Bamazon, the #2 online retailer.");
-                                connection.end();
-                            }
-                        });        
-                        
-                    }
-                  //if the user selected the wrong item or quantity and confirmed so
-                  //start over by running the buyProducts function.     
-                } else {
-                    console.log("No problem let's start over then.");
-                    buyProducts();
-                }
+                        //if the user selected the wrong item or quantity and confirmed so
+                        //start over by running the buyProducts function.     
+                        } else {
+                            console.log("No problem let's start over then.");
+                            buyProducts();
+                        }
+                    });
             });
-        });
+        //else statement if the item_id number is invalid.    
+        } else {
+            console.log("Invalid Item ID. Please select a valid Item ID.");
+            buyProducts();
+        }  
     });
 }
 
