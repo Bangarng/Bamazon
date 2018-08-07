@@ -60,12 +60,12 @@ function managerGUI() {
 }
 
 function productForSale() {
-    console.log("Here are all products currently for Sale");
     queryStr = 'SELECT * FROM products';
     //Grabbing and displaying the data
     connection.query(queryStr, function(err, data) {
         if (err) throw err;
-        console.log("Here's what's in stock today: "); 
+        console.log("--------------------------------------------------------" + '\n');
+        console.log("Here's what's in stock today:" + '\n'); 
         //displaying items in a fashionable manor
         var strOut = '';
         for (var i = 0; i < data.length; i++) {
@@ -77,13 +77,33 @@ function productForSale() {
             strOut += 'Stock Quantity: ' + data[i].stock_quantity + '\n';
             console.log(strOut);
         }
-        console.log("__________________________________________");
+        console.log("--------------------------------------------------------" + '\n');
         managerGUI()
     });
 }
 
 function productLowInventory() {
-    console.log("Here are the products with less than 5 items left:");
+    //building mySQL query
+    queryStr = 'select * from products WHERE stock_quantity < 5';
+    //Grabbing and displaying the data
+    connection.query(queryStr, function(err, data) {
+        if (err) throw err;
+        console.log("--------------------------------------------------------" + '\n');
+        console.log("Here are the product(s) with less than 5 items left:" + "\n");
+        //displaying items in a fashionable manor
+        var strOut = '';
+        for (var i = 0; i < data.length; i++) {
+            strOut = '';
+            strOut += 'Item ID: ' + data[i].item_id + ' | ';
+            strOut += 'Product Name: ' + data[i].product_name + ' | ';
+            strOut += 'Department: ' + data[i].department_name + ' | ';
+            strOut += 'Price: $' + data[i].price + ' | ';
+            strOut += 'Stock Quantity: ' + data[i].stock_quantity + '\n';
+            console.log(strOut);
+        } 
+    console.log("--------------------------------------------------------" + '\n');
+    managerGUI()    
+    });    
 }
 
 function productAddInventory() {
