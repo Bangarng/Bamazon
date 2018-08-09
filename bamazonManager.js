@@ -107,7 +107,95 @@ function productLowInventory() {
 }
 
 function productAddInventory() {
-    console.log("What would you like to stock?");
+    //building mySQL query
+    queryStr = 'SELECT * FROM products';
+
+    //Grabbing and displaying the data
+    connection.query(queryStr, function(err, data) {
+    if (err) throw err;
+    console.log("What would you like to re-stock?");
+    
+    //displaying items in a fashionable manor
+    var strOut = '';
+    for (var i = 0; i < data.length; i++) {
+        strOut = '';
+        strOut += 'Item ID: ' + data[i].item_id + ' | ';
+        strOut += 'Product Name: ' + data[i].product_name + ' | ';
+        strOut += 'Department: ' + data[i].department_name + ' | ';
+        strOut += 'Price: $' + data[i].price + ' | ';
+        strOut += 'Stock Quantity: ' + data[i].stock_quantity + '\n';
+        console.log(strOut);
+    }
+        //running buy function
+        restockProducts();
+    });
+}
+
+//prompts the user for what action they should take (select items, purchase stuff, not purchase stuff, etc.)
+function restockProducts() {
+    inquirer
+    .prompt([
+        {
+            type: "input",
+            message: "What is the ITEM ID of the product you would like to restock?",
+            name: "productNumber"
+        },
+        {
+            type: "input",
+            message: "How many units would you like to add?",
+            name: "itemQuantity"
+        }
+    ])
+    .then(function(answer) {
+        //running functions based on inquirer questions
+        var item = answer.productNumber;
+        var quantity = answer.itemQuantity;
+        var queryStr2 = 'SELECT * FROM products WHERE ?';
+        if(item > 0 && item < 10) {
+            inquirer
+            .prompt( 
+                //confirm they selected the right item and quantity
+                {
+                    type: "confirm",
+                    message: "I see you've selected " + item + " and " + quantity + ". Is this correct?",
+                    name: "confirmRestock",
+                    default: true
+                }    
+            )
+            .then(function(userResponse) {
+                connection.query(queryStr2, {item_id: item}, function(err, data) {
+                    if (err) throw err;
+                    var productInfo = data[0];
+                    //if user is ready to make the purchase
+                    if (userResponse.confirmRestock) {
+                        console.log("Great.");
+                        //checking if we have enough inventory for purchase
+                            console.log("Restocking " + quantity + " " + productInfo.product_name + "(s)."); 
+                            // Construct the updating query string
+                            var totalPrducts = parseInt(productInfo.stock_quantity) + parseInt(quantity);
+                            console.log(totalPrducts);
+                            var updateQuantityQuery = 'UPDATE products SET stock_quantity = ' + totalPrducts + ' WHERE item_id = ' + item;
+                            // Update the inventory
+                            connection.query(updateQuantityQuery, function(err, data) {
+                                if (err) throw err;
+                                console.log("Your restock was successful. There are now " + totalPrducts + " " + productInfo.product_name + "(s) available.");
+                                console.log("--------------------------------------------------------" + '\n');
+                                managerGUI()    
+                            })
+                    //if the user selected the wrong item or quantity and confirmed so
+                    //start over by running the buyProducts function.     
+                    } else {
+                        console.log("Ok no problem. Let's start over.");
+                        managerGUI();  
+                    }
+                });
+            });
+        //else statement if the item_id number is invalid.    
+        } else {
+            console.log("Invalid Item ID. Please select a valid Item ID.");
+            restockProducts(); 
+        }  
+    });
 }
 
 function productNewProduct() {

@@ -96,7 +96,6 @@ function buyProducts() {
                                 // Update the inventory
                                 connection.query(updateQuantityQuery, function(err, data) {
                                     if (err) throw err;
-
                                     console.log("Your purchase was successful. Your total is $" + parseFloat(productInfo.price * quantity).toFixed(2) + ".");
                                     console.log("Thank you for using Bamazon, the #2 online retailer."); 
                                     connection.end();
